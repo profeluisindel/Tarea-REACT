@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { obtenerDocentes, crearDocente } from './services/docentesService.js'
 import manejarError from './utils/manejarError.js'
 import Encabezado from './components/Encabezado.jsx'
-import FormularioCrear from './components/FormularioCrear.jsx'
-import ListaDocentes from './components/ListaDocentes.jsx'
+import MenuNavegacion from './components/MenuNavegacion.jsx'
 import PieDePagina from './components/PieDePagina.jsx'
+import InicioPage from './pages/InicioPage.jsx'
+import ListarDocentesPage from './pages/ListarDocentesPage.jsx'
+import CrearDocentePage from './pages/CrearDocentePage.jsx'
+import LoginPage from './pages/LoginPage.jsx'
+import RegisterPage from './pages/RegisterPage.jsx'
+import { getToken, clearToken } from './services/authService.js'
 import './App.css'
 
 function App() {
@@ -13,9 +20,12 @@ function App() {
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
+  const [token, setToken] = useState(null)
 
   useEffect(() => {
     cargarDocentes()
+    const t = getToken()
+    if (t) setToken(t)
   }, [])
 
   const cargarDocentes = async () => {
@@ -50,72 +60,54 @@ function App() {
     }
   }
 
-  const manejarEditar = () => {
-    setError('')
-    setMensaje('')
-  }
+  const navigate = useNavigate()
 
-  const [mostrarLista, setMostrarLista] = useState(true)
-
-  const cambiarVisibilidadLista = () => {
-    setMostrarLista((actual) => !actual)
+  const handleLogout = () => {
+    clearToken()
+    setToken(null)
+    navigate('/login')
   }
 
   return (
     <div className="app-shell container py-4">
       <Encabezado />
+      <MenuNavegacion isAuthenticated={!!token} onLogout={handleLogout} />
 
-      <main className="row gy-4">
-        <section className="col-lg-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <FormularioCrear
-                onCrear={manejarCrear}
-                loading={guardando}
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Navigate to="/inicio" replace />} />
+          <Route path="/inicio" element={<InicioPage />} />
+          <Route
+            path="/docentes"
+            element={
+              <ListarDocentesPage
+                docentes={docentes}
+                cargando={cargando}
                 error={error}
                 success={mensaje}
+                onReload={cargarDocentes}
               />
-            </div>
-          </div>
-        </section>
+            }
+          />
+          <Route
+            path="/crear"
+            element={
+              token ? (
+                <CrearDocentePage
+                  onCrear={manejarCrear}
+                  loading={guardando}
+                  error={error}
+                  success={mensaje}
+                />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
 
-        <section className="col-lg-8">
-          <div className="card shadow-sm border-warning bg-black text-warning">
-            <div className="card-body">
-              <div className="d-flex align-items-start justify-content-between mb-3 gap-3 flex-column flex-sm-row">
-                <div>
-                  <p className="eyebrow mb-1 text-warning">Directorio académico</p>
-                  <h2 className="h5 mb-2 text-warning">Listado de docentes</h2>
-                  <p className="panel-copy mb-0 text-warning-opacity-75">
-                    Vista conectada al endpoint <code className="text-warning">GET /api/docentes</code>.
-                  </p>
-                </div>
-
-                <button type="button" className="btn btn-outline-warning btn-sm" onClick={cambiarVisibilidadLista}>
-                  {mostrarLista ? 'Ocultar lista' : 'Ver lista de docentes'}
-                </button>
-              </div>
-
-              {cargando ? <p className="estado">Cargando docentes...</p> : null}
-
-              {!mostrarLista ? (
-                <p className="estado">Haz clic en el botón para ver la lista de docentes.</p>
-              ) : null}
-
-              {mostrarLista ? (
-                docentes.length === 0 ? (
-                  !cargando && (
-                    <p className="estado">
-                      Todavía no hay docentes registrados. Agrega el primero desde el formulario.
-                    </p>
-                  )
-                ) : (
-                  <ListaDocentes docentes={docentes} />
-                )
-              ) : null}
-            </div>
-          </div>
-        </section>
+          <Route path="/login" element={<LoginPage onLogin={(t) => setToken(t)} />} />
+          <Route path="/registro" element={<RegisterPage />} />
+        </Routes>
       </main>
 
       <PieDePagina />

@@ -37,6 +37,7 @@ body {
 #root {
   width: min(1200px, 100%);
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 h1,

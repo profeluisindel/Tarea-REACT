@@ -20,8 +20,12 @@ function FormularioCrear({ onCrear, loading, error, success }) {
 
   const manejarEnvio = async (event) => {
     event.preventDefault()
-    await onCrear(formulario)
-    setFormulario(estadoInicial)
+    try {
+      await onCrear(formulario)
+      setFormulario(estadoInicial)
+    } catch {
+      // El estado de error ya lo maneja el contenedor.
+    }
   }
 
   return (

@@ -1,0 +1,10 @@
+{
+  "name": "tarea-react-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix inall run dev",
+    "build": "npm --prefix inall run build",
+    "lint": "npm --prefix inall run lint",
+    "preview": "npm --prefix inall run preview"
+  }
+}

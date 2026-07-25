@@ -1,4 +1,5 @@
 import { DOCENTES_ENDPOINT } from '../api/apiConfig.js'
+import { getToken } from './authService.js'
 
 const parseResponse = async (response, fallbackMessage) => {
   const data = await response.json().catch(() => null)
@@ -16,9 +17,13 @@ export const obtenerDocentes = async () => {
 }
 
 export const crearDocente = async (docente) => {
+  const token = getToken()
   const response = await fetch(DOCENTES_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(docente),
   })
 
